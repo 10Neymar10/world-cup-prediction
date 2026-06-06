@@ -1,0 +1,179 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ========== 用户与认证 ==========
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String?
+  name         String
+  avatar       String?
+  bio          String?
+  role         String   @default("user") // "user" | "admin"
+  level        String   @default("rookie") // "rookie" | "fan" | "expert" | "legend"
+  totalPoints  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  accounts            Account[]
+  predictions         Prediction[]
+  championPrediction  ChampionPrediction?
+  goldenBootPrediction GoldenBootPrediction?
+  sentFriends         Friend[]        @relation("SentFriends")
+  receivedFriends     Friend[]        @relation("ReceivedFriends")
+  comments            Comment[]
+}
+
+model Account {
+  id                String   @id @default(uuid())
+  userId            String
+  provider          String   // "google" | "github"
+  providerAccountId String
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// ========== 球队与球员 ==========
+
+model Team {
+  id       String  @id @default(uuid())
+  name     String  // 中文名
+  nameEn   String  // 英文名
+  flag     String? // 国旗 emoji
+  fifaRank Int?
+  group    String  // A-L
+
+  homeMatches    Match[]            @relation("HomeTeam")
+  awayMatches    Match[]            @relation("AwayTeam")
+  players        Player[]
+  championPreds  ChampionPrediction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Player {
+  id       String  @id @default(uuid())
+  name     String
+  teamId   String
+  position String? // "forward" | "midfielder" | "defender" | "goalkeeper"
+  number   Int?
+
+  team              Team                   @relation(fields: [teamId], references: [id])
+  goldenBootPreds   GoldenBootPrediction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ========== 比赛 ==========
+
+model Match {
+  id         String   @id @default(uuid())
+  homeTeamId String
+  awayTeamId String
+  matchTime  DateTime // UTC
+  stage      String   // "group" | "round32" | "round16" | "quarter" | "semi" | "third" | "final"
+  group      String?  // A-L for group stage, null for knockout
+  homeScore  Int?
+  awayScore  Int?
+  status     String   @default("scheduled") // "scheduled" | "live" | "finished" | "cancelled"
+
+  homeTeam    Team         @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam    Team         @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  predictions Prediction[]
+  comments    Comment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([matchTime, stage])
+}
+
+// ========== 预测 ==========
+
+model Prediction {
+  id              String  @id @default(uuid())
+  userId          String
+  matchId         String
+  homeScore       Int
+  awayScore       Int
+  predictedWinner String? // teamId (knockout only)
+  visibility      String  @default("public") // "public" | "friends_only" | "private"
+  pointsAwarded   Int     @default(0)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, matchId])
+  @@index([userId])
+}
+
+model ChampionPrediction {
+  id        String   @id @default(uuid())
+  userId    String   @unique // one per user
+  teamId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id])
+}
+
+model GoldenBootPrediction {
+  id        String   @id @default(uuid())
+  userId    String   @unique // one per user
+  playerId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id])
+}
+
+// ========== 社交 ==========
+
+model Friend {
+  id        String   @id @default(uuid())
+  userId    String
+  friendId  String
+  status    String   @default("pending") // "pending" | "accepted" | "blocked"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User @relation("SentFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("ReceivedFriends", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  userId    String
+  matchId   String
+  content   String
+  parentId  String?  // reply to another comment
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  match    Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentReplies")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([matchId, createdAt])
+}
