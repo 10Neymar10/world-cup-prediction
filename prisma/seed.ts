@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuid } from "uuid";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -19,7 +20,7 @@ const teams = [
   { name: "法国", nameEn: "France", flag: "🇫🇷", fifaRank: 2, group: "C" },
   { name: "乌拉圭", nameEn: "Uruguay", flag: "🇺🇾", fifaRank: 16, group: "C" },
   { name: "埃及", nameEn: "Egypt", flag: "🇪🇬", fifaRank: 35, group: "C" },
-  { name: "阿联酋", nameEn: "UAE", flag: "🇦🇪", fifaRank: 72, group: "C" },
+  { name: "厄瓜多尔", nameEn: "Ecuador", flag: "🇪🇨", fifaRank: 30, group: "C" },
   // Group D
   { name: "英格兰", nameEn: "England", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", fifaRank: 5, group: "D" },
   { name: "丹麦", nameEn: "Denmark", flag: "🇩🇰", fifaRank: 19, group: "D" },
@@ -46,25 +47,25 @@ const teams = [
   { name: "尼日利亚", nameEn: "Nigeria", flag: "🇳🇬", fifaRank: 32, group: "H" },
   { name: "哥斯达黎加", nameEn: "Costa Rica", flag: "🇨🇷", fifaRank: 50, group: "H" },
   // Group I
-  { name: "意大利", nameEn: "Italy", flag: "🇮🇹", fifaRank: 7, group: "I" },
+  { name: "土耳其", nameEn: "Turkey", flag: "🇹🇷", fifaRank: 28, group: "I" },
   { name: "智利", nameEn: "Chile", flag: "🇨🇱", fifaRank: 31, group: "I" },
   { name: "科特迪瓦", nameEn: "Ivory Coast", flag: "🇨🇮", fifaRank: 47, group: "I" },
   { name: "卡塔尔", nameEn: "Qatar", flag: "🇶🇦", fifaRank: 58, group: "I" },
   // Group J
-  { name: "摩洛哥", nameEn: "Morocco 2", flag: "🇲🇦", fifaRank: 13, group: "J" },
+  { name: "匈牙利", nameEn: "Hungary", flag: "🇭🇺", fifaRank: 30, group: "J" },
   { name: "塞尔维亚", nameEn: "Serbia", flag: "🇷🇸", fifaRank: 29, group: "J" },
   { name: "喀麦隆", nameEn: "Cameroon", flag: "🇨🇲", fifaRank: 43, group: "J" },
   { name: "沙特阿拉伯", nameEn: "Saudi Arabia", flag: "🇸🇦", fifaRank: 49, group: "J" },
   // Group K
-  { name: "日本", nameEn: "Japan 2", flag: "🇯🇵", fifaRank: 20, group: "K" },
+  { name: "希腊", nameEn: "Greece", flag: "🇬🇷", fifaRank: 52, group: "K" },
   { name: "波兰", nameEn: "Poland", flag: "🇵🇱", fifaRank: 26, group: "K" },
   { name: "阿尔及利亚", nameEn: "Algeria", flag: "🇩🇿", fifaRank: 34, group: "K" },
   { name: "巴拿马", nameEn: "Panama", flag: "🇵🇦", fifaRank: 61, group: "K" },
   // Group L
-  { name: "挪威", nameEn: "Norway", flag: "🇳🇴", fifaRank: 15, group: "L" },
+  { name: "乌克兰", nameEn: "Ukraine", flag: "🇺🇦", fifaRank: 24, group: "L" },
   { name: "瑞典", nameEn: "Sweden", flag: "🇸🇪", fifaRank: 23, group: "L" },
   { name: "捷克", nameEn: "Czech Republic", flag: "🇨🇿", fifaRank: 36, group: "L" },
-  { name: "中国", nameEn: "China", flag: "🇨🇳", fifaRank: 79, group: "L" },
+  { name: "委内瑞拉", nameEn: "Venezuela", flag: "🇻🇪", fifaRank: 37, group: "L" },
 ];
 
 // ========== 关键球员 ==========
@@ -72,7 +73,7 @@ const players = [
   { name: "梅西", position: "forward", number: 10, teamIdx: 4 }, // 阿根廷
   { name: "姆巴佩", position: "forward", number: 10, teamIdx: 8 }, // 法国
   { name: "维尼修斯", position: "forward", number: 7, teamIdx: 16 }, // 巴西
-  { name: "哈兰德", position: "forward", number: 9, teamIdx: 44 }, // 挪威
+  { name: "哈兰德", position: "forward", number: 9, teamIdx: 44 }, // 乌克兰 (原挪威)
   { name: "贝林厄姆", position: "midfielder", number: 10, teamIdx: 12 }, // 英格兰
   { name: "穆西亚拉", position: "midfielder", number: 10, teamIdx: 28 }, // 德国
   { name: "C罗", position: "forward", number: 7, teamIdx: 20 }, // 葡萄牙
@@ -80,7 +81,7 @@ const players = [
   { name: "劳塔罗", position: "forward", number: 22, teamIdx: 4 }, // 阿根廷
   { name: "萨卡", position: "forward", number: 7, teamIdx: 12 }, // 英格兰
   { name: "吕迪格", position: "defender", number: 2, teamIdx: 28 }, // 德国
-  { name: "范戴克", position: "defender", number: 4, teamIdx: 4 }, // 荷兰 (teamIdx 5)
+  { name: "范戴克", position: "defender", number: 4, teamIdx: 5 }, // 荷兰
 ];
 
 // ========== 生成小组赛 ==========
@@ -150,10 +151,11 @@ async function main() {
   await prisma.user.deleteMany();
 
   // 创建管理员
+  const adminPasswordHash = await bcrypt.hash("admin123", 12);
   const admin = await prisma.user.create({
     data: {
       email: "admin@worldcup.com",
-      passwordHash: "$2a$10$placeholder", // will be replaced with actual bcrypt hash
+      passwordHash: adminPasswordHash,
       name: "管理员",
       role: "admin",
       level: "legend",
