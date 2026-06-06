@@ -143,7 +143,7 @@ export default function MatchDetailPage() {
             <div className="flex flex-col items-center flex-1">
               <span className="text-5xl sm:text-6xl mb-3">{match.homeTeam.flag || "⚽"}</span>
               <h2 className="text-xl sm:text-2xl font-bold text-center">{match.homeTeam.name}</h2>
-              <p className="text-sm text-gray-500">{match.homeTeam.nameEn}</p>
+              <p className="text-sm text-gray-500">{match.homeTeam.flag || "⚽"}</p>
             </div>
 
             <div className="flex flex-col items-center shrink-0">
@@ -179,7 +179,7 @@ export default function MatchDetailPage() {
             <div className="flex flex-col items-center flex-1">
               <span className="text-5xl sm:text-6xl mb-3">{match.awayTeam.flag || "⚽"}</span>
               <h2 className="text-xl sm:text-2xl font-bold text-center">{match.awayTeam.name}</h2>
-              <p className="text-sm text-gray-500">{match.awayTeam.nameEn}</p>
+              <p className="text-sm text-gray-500">{match.awayTeam.flag || "⚽"}</p>
             </div>
           </div>
         </CardContent>

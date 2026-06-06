@@ -61,7 +61,7 @@ export default function TeamDetailPage() {
         <CardContent className="p-8 text-center">
           <span className="text-6xl mb-4 block">{team.flag || "⚽"}</span>
           <h1 className="text-3xl font-bold mb-1">{team.name}</h1>
-          <p className="text-gray-400 mb-4">{team.nameEn}</p>
+          <p className="text-gray-400 mb-4">{team.flag || "⚽"}</p>
           <div className="flex items-center justify-center gap-3">
             <Badge className="bg-[#FFD700]/10 text-[#FFD700] border-[#FFD700]/30">
               {team.group} 组

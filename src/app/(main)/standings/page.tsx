@@ -83,7 +83,7 @@ export default function StandingsPage() {
                           <span className="text-xl">{team.flag || "⚽"}</span>
                           <div>
                             <p className="font-medium">{team.name}</p>
-                            <p className="text-xs text-gray-500">{team.nameEn}</p>
+                            <p className="text-xs text-gray-500">{team.flag || "⚽"}</p>
                           </div>
                         </div>
                       </td>

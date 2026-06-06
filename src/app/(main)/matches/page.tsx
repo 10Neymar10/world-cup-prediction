@@ -151,7 +151,7 @@ export default function MatchesPage() {
                       <div className="flex items-center gap-3 flex-1 justify-end">
                         <span className="text-right">
                           <p className="font-semibold">{match.homeTeam.name}</p>
-                          <p className="text-xs text-gray-500">{match.homeTeam.nameEn}</p>
+                          <p className="text-xs text-gray-500">{match.homeTeam.flag || "⚽"}</p>
                         </span>
                         <span className="text-3xl">{match.homeTeam.flag || "⚽"}</span>
                       </div>
@@ -181,7 +181,7 @@ export default function MatchesPage() {
                         <span className="text-3xl">{match.awayTeam.flag || "⚽"}</span>
                         <span>
                           <p className="font-semibold">{match.awayTeam.name}</p>
-                          <p className="text-xs text-gray-500">{match.awayTeam.nameEn}</p>
+                          <p className="text-xs text-gray-500">{match.awayTeam.flag || "⚽"}</p>
                         </span>
                       </div>
                     </div>

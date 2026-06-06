@@ -67,7 +67,7 @@ export default function TeamsPage() {
                       <CardContent className="p-4 text-center">
                         <span className="text-4xl mb-2 block">{team.flag || "⚽"}</span>
                         <p className="font-semibold">{team.name}</p>
-                        <p className="text-xs text-gray-500">{team.nameEn}</p>
+                        <p className="text-xs text-gray-500">{team.flag || "⚽"}</p>
                         {team.fifaRank && (
                           <p className="text-xs text-gray-400 mt-1">
                             FIFA #{team.fifaRank}

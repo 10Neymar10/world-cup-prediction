@@ -203,17 +203,32 @@ async function main() {
     { stage: "final", label: "决赛", count: 1, daysAfter: 32 },
   ];
 
+  // Shuffle helper
+  function shuffle<T>(arr: T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  let teamIndex = 0;
   for (const ks of knockoutStages) {
     for (let i = 0; i < ks.count; i++) {
       const matchDate = new Date(baseDate);
       matchDate.setDate(matchDate.getDate() + ks.daysAfter + i);
       matchDate.setHours(19, 0, 0, 0);
 
-      // 淘汰赛对阵暂时用占位球队（实际比赛对阵由小组赛结果决定）
+      // 淘汰赛对阵暂时随机配对（实际比赛对阵由小组赛结果决定）
+      const shuffled = shuffle(createdTeams);
+      const homeId = shuffled[0].id;
+      const awayId = shuffled[1].id;
+
       await prisma.match.create({
         data: {
-          homeTeamId: createdTeams[0].id, // placeholder, will be updated
-          awayTeamId: createdTeams[1].id, // placeholder
+          homeTeamId: homeId,
+          awayTeamId: awayId,
           matchTime: matchDate,
           stage: ks.stage,
           group: null,
